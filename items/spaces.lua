@@ -20,9 +20,7 @@ local function split(str, sep)
 end
 
 for i, workspace in ipairs(workspaces) do
-	print("Workspace " .. i .. ": " .. workspace)
 	local selected = workspace == current_workspace
-	print("  Selected: " .. tostring(selected))
 	local space = sbar.add("item", "item." .. i, {
 		icon = {
 			font = {
