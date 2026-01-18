@@ -20,7 +20,7 @@ local function get_count_lsapp(app)
 
 	local count = string.match(result, '"label"="(%d+)"')
 
-	return count and tonumber(count) or nil
+	return count and tonumber(count) or 0
 end
 
 local methods = {
