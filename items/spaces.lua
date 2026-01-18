@@ -179,7 +179,6 @@ local spaces_indicator = sbar.add("item", {
 
 -- Event handles
 space_window_observer:subscribe("space_windows_change", function()
-	print("Space windows change detected")
 	for i, ws in ipairs(workspaces) do
 		set_space_icons(ws.name, spaces[i])
 	end
