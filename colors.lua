@@ -11,17 +11,22 @@ return {
 	transparent = 0x00000000,
 
 	bar = {
-		bg = 0xd02c2e34,
+		bg = 0x402c2e34,
 		border = 0xff2c2e34,
 	},
 	popup = {
 		bg = 0xc02c2e34,
 		border = 0xff7f8490,
 	},
-	bg1 = 0xff363944,
-	bg2 = 0xff414550,
-	bg3 = 0xff4b5162,
+	bg1 = 0xffA78E50,
+	bg2 = 0xff4F3C72,
+	bg3 = 0xff355969,
 
+	fg1 = 0xffEBDBB2,
+	fg2 = 0xff8A7DA0,
+	fg3 = 0xff728A94,
+
+	no_rainbow = 0xff7f8490,
 	rainbow = {
 		0xffff007c,
 		0xffc53b53,

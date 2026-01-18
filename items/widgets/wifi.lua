@@ -4,7 +4,7 @@ local settings = require("settings")
 
 -- Execute the event provider binary which provides the event "network_update"
 -- for the network interface "en0", which is fired every 2.0 seconds.
-sbar.exec("killall network_load >/dev/null; $HOME/.local/share/sketchybar/network_load en0 network_update 2.0")
+sbar.exec("killall -9 network_load >/dev/null; $HOME/.local/share/sketchybar/network_load en0 network_update 2.0")
 
 local popup_width = 250
 
@@ -65,8 +65,8 @@ local wifi = sbar.add("item", "widgets.wifi.padding", {
 -- Background around the item
 local wifi_bracket = sbar.add("bracket", "widgets.wifi.bracket", { wifi.name, wifi_up.name, wifi_down.name }, {
 	background = {
-		color = colors.bg1,
-		border_color = colors.rainbow[#colors.rainbow - 4],
+		color = colors.black,
+		border_color = settings.rainbow and colors.rainbow[#colors.rainbow - 4] or colors.no_rainbow,
 		border_width = 1,
 	},
 	popup = {

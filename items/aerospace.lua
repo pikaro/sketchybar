@@ -1,3 +1,27 @@
+local json = require("cjson")
+
+function runcmd(cmd)
+	local handle = io.popen(cmd .. " 2>&1 | head -c 65536", "r")
+	if handle == nil then
+		print("Error: could not execute command: " .. cmd)
+		return ""
+	end
+
+	local result = handle:read("*a")
+	-- FIXME: Hangs in close() randomly despite no child processes actually running
+	--        Is waiting for nonexistent low PID like 4 - memory corruption?
+	--        Apparent deadlock with mach2_read for IPC to CPU/network usage?
+	--        Lua GC should clean up FDs and even with rapid switching, no apparent
+	--        persistent leakage.
+
+	-- local ok, reason, code = handle:close()
+	-- if not ok then
+	-- 	print("Error: failed: ok=" .. tostring(ok) .. ", reason=" .. tostring(reason) .. ", code=" .. tostring(code))
+	-- end
+
+	return result
+end
+
 function dump(o)
 	if type(o) == "table" then
 		local s = "{ "
@@ -38,12 +62,18 @@ function parse_string_to_table(s)
 	return result
 end
 
-function get_workspaces()
-	local file = io.popen("aerospace list-workspaces --all")
-	local result = file:read("*a")
-	file:close()
+function get_workspaces(ws_old, ws_order)
+	local result = runcmd(
+		"aerospace list-workspaces --all --json --format '%{workspace} %{workspace-is-visible} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-focused}'"
+	)
 
-	return parse_string_to_table(result)
+	if result == "" then
+		return ws_old or {}
+	end
+
+	local ws_json = json.decode(result)
+
+	return get_workspaces_ordered(ws_json, ws_order)
 end
 
 function get_workspaces_ordered(workspaces, order)
@@ -54,7 +84,11 @@ function get_workspaces_ordered(workspaces, order)
 
 	local decorated = {}
 	for i, ws in ipairs(workspaces) do
-		local prefix = ws:match("^%s*(%S+)")
+		local prefix = ws.workspace:match("^%s*(%S+)")
+		ws["name"] = ws["workspace"]
+		ws["focused"] = ws["workspace-is-focused"]
+		ws["visible"] = ws["workspace-is-visible"]
+		ws["monitor"] = tostring(ws["monitor-appkit-nsscreen-screens-id"])
 		decorated[i] = { ws = ws, r = rank[prefix] or math.huge, i = i }
 	end
 
@@ -71,51 +105,4 @@ function get_workspaces_ordered(workspaces, order)
 	end
 
 	return sorted
-end
-
-function get_current_workspace()
-	local file = io.popen("aerospace list-workspaces --focused")
-	local result = file:read("*a")
-	file:close()
-
-	return parse_string_to_table(result)[1]
-end
-
-function get_monitors()
-	local file = io.popen("aerospace list-monitors | awk '{print $1}'")
-	local result = file:read("*a")
-	file:close()
-
-	return parse_string_to_table(result)
-end
-
-function get_workspaces_on_monitor(monitor)
-	local file = io.popen("aerospace list-workspaces --monitor " .. monitor)
-	local result = file:read("*a")
-	file:close()
-
-	return parse_string_to_table(result, "\n")
-end
-
-function get_visible_workspace_on_monitor(monitor)
-	local file = io.popen("aerospace list-workspaces --monitor " .. monitor .. " --visible")
-	local result = file:read("*a")
-	file:close()
-
-	return parse_string_to_table(result)[1]
-end
-
-function is_workspace_selected(workspace)
-	local available_monitors = get_monitors()
-	-- print("Checking: " .. workspace .. " Available monitors: " .. dump(available_monitors))
-	for _, monitor in ipairs(available_monitors) do
-		local visible_workspace = get_visible_workspace_on_monitor(monitor)
-		-- print('types' .. type(visible_workspace) .. ' - ' .. type(workspace))
-		-- print("Checking: " .. workspace .. " On Monitor: " .. monitor .. " Result: " .. visible_workspace .. ' - ', (visible_workspace == workspace))
-		if visible_workspace == workspace then
-			return true
-		end
-	end
-
-	return false
 end

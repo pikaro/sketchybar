@@ -37,7 +37,7 @@ end
 
 sbar.add("bracket", { "/menu\\..*/" }, {
 	background = {
-		color = colors.bg1,
+		color = colors.black,
 	},
 })
 
