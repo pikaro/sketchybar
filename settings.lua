@@ -17,7 +17,7 @@ return {
 	bar = {
 		height = 36,
 		padding = {
-			x = 10,
+			x = 5,
 			y = 0,
 		},
 		background = colors.bar.bg,
@@ -26,8 +26,8 @@ return {
 		height = 26,
 		gap = 5,
 		padding = {
-			right = 16,
-			left = 12,
+			right = 8,
+			left = 6,
 			top = 0,
 			bottom = 0,
 		},
@@ -44,7 +44,7 @@ return {
 		corner_radius = 6,
 	},
 
-	icons = "sketchybar-app-font:Regular:16.0", -- alternatively available: NerdFont
+	icons = "sketchybar-app-font:Regular:14.0", -- alternatively available: NerdFont
 
 	font = {
 		text = "FiraCode Nerd Font Mono", -- Used for text

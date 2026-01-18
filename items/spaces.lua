@@ -5,7 +5,7 @@ local app_icons = require("helpers.app_icons")
 
 local spaces = {}
 
-local space_order = { "k", "w", "c", "t", "m", "1", "2", "3" }
+local space_order = { "k", "w", "c", "t", "m", "s", "1", "2", "a" }
 local workspaces_found = get_workspaces()
 local workspaces = get_workspaces_ordered(workspaces_found, space_order)
 
@@ -72,7 +72,7 @@ for i, workspace in ipairs(workspaces) do
 		end
 
 		if no_app then
-			icon_line = " —"
+			icon_line = ""
 		end
 
 		sbar.animate("tanh", 10, function()
@@ -119,11 +119,10 @@ for i, workspace in ipairs(workspaces) do
 	end)
 
 	space:subscribe("mouse.clicked", function(env)
-		local SID = split(env.NAME, ".")[2]
 		if env.BUTTON == "other" then
 			space_popup:set({
 				background = {
-					image = "item." .. SID,
+					image = "item." .. i,
 				},
 			})
 			space:set({
@@ -132,7 +131,7 @@ for i, workspace in ipairs(workspaces) do
 				},
 			})
 		else
-			sbar.exec("aerospace workspace " .. SID)
+			sbar.exec("aerospace workspace " .. workspace)
 		end
 	end)
 
@@ -190,7 +189,7 @@ space_window_observer:subscribe("space_windows_change", function(env)
 				end
 
 				if no_app then
-					icon_line = " —"
+					icon_line = ""
 				end
 
 				sbar.animate("tanh", 10, function()
@@ -219,7 +218,7 @@ space_window_observer:subscribe("aerospace_focus_change", function(env)
 				end
 
 				if no_app then
-					icon_line = " —"
+					icon_line = ""
 				end
 
 				sbar.animate("tanh", 10, function()
