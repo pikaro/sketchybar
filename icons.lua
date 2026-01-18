@@ -8,6 +8,7 @@ return {
 	cpu = "􀫥",
 	nuke = "",
 	clipboard = "􀉄",
+	calendar = "􀉉",
 
 	switch = {
 		on = "􁏮",
@@ -40,8 +41,10 @@ return {
 	},
 
 	media = {
-		back = "􀊊",
-		forward = "􀊌",
-		play_pause = "􀊈",
+		back = "􀰪",
+		forward = "􀰫",
+		play_pause = "􀊇",
+		play = "􀊃",
+		pause = "􀊆",
 	},
 }

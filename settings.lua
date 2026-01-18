@@ -49,6 +49,11 @@ return {
 
 	colors = {
 		front_app = colors.black,
+		media_buttons = colors.black,
+	},
+
+	media = {
+		max_chars = 30,
 	},
 
 	notifications = {

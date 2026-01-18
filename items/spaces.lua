@@ -46,7 +46,7 @@ local function set_space_icons(ws_name, space)
 				no_app = false
 				local app_name = app["app-name"]
 				local lookup = app_icons[app_name]
-				local icon = ((lookup == nil) and app_icons["default"] or lookup)
+				local icon = ((lookup == nil) and app_icons["Default"] or lookup)
 				if tostring(app["window-id"]) == focused_window then
 					icon = "*" .. icon
 				end
