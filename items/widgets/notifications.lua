@@ -2,6 +2,7 @@ local app_icons = require("helpers.app_icons")
 local colors = require("colors")
 local settings = require("settings")
 local settings_system = require("settings_system")
+local log = require("helpers.log")
 
 local widgets = {}
 
@@ -18,9 +19,9 @@ local function get_count_lsapp(app)
 
 	-- Format: "StatusLabel"={ "label"="<count>" }
 
-	local count = string.match(result, '"label"="(%d+)"')
+	local count = string.match(result, '"label"="([^"]+)"')
 
-	return count and tonumber(count) or 0
+	return count or 0
 end
 
 local methods = {
@@ -43,6 +44,7 @@ end
 local function get_count(app)
 	if not methods[app] then
 		-- FIXME: Include fallback for WhatsApp
+		log.log(log.systems.notifications, log.levels.warning, "No notification method for app: " .. app)
 		return nil
 	end
 
@@ -51,9 +53,10 @@ end
 
 local function update_count(app, widget)
 	local count = get_count(app)
+	log.log(log.systems.notifications, log.levels.debug, "App: " .. app .. ", Count: " .. tostring(count))
 
 	if count then
-		if count > 0 then
+		if (type(count) == "number" and count > 0) or (type(count) == "string" and count ~= "0" and count ~= "") then
 			widget:set({
 				label = {
 					string = tostring(count),
@@ -72,7 +75,7 @@ local function update_count(app, widget)
 		else
 			widget:set({
 				label = {
-					string = "", --0",
+					string = "0",
 					color = colors.grey,
 					drawing = settings.notifications_show_empty,
 				},
@@ -135,12 +138,16 @@ local function add_widget(app)
 	})
 
 	widgets[app]:subscribe("routine", function()
+		log.log(log.systems.notifications, log.levels.debug, "Updating notification count for app: " .. app)
 		update_count(app, widgets[app])
 	end)
 
 	widgets[app]:subscribe("mouse.clicked", function()
+		log.log(log.systems.notifications, log.levels.debug, "Clicked notification widget for app: " .. app)
 		run(app)
 	end)
+
+	log.log(log.systems.notifications, log.levels.info, "Added notification widget for app: " .. app)
 end
 
 -- combine settings.notifications and settings_system.notifications
@@ -151,4 +158,5 @@ end
 
 for _, app in rpairs(notifications) do
 	add_widget(app)
+	update_count(app, widgets[app])
 end
