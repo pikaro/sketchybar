@@ -1,5 +1,4 @@
-local colors = require("colors")
-local icons = require("icons")
+local log = require("helpers.log")
 local settings = require("settings")
 
 local apple = sbar.add("item", {
@@ -54,6 +53,17 @@ apple:subscribe("aerospace_leave_service_mode", function(_)
 			},
 		})
 	end)
+end)
+
+apple:subscribe("set_log_level", function(env)
+	local level = env["LEVEL"]
+	local level_num = log.levels[level]
+	if level_num == nil then
+		log.log(log.systems.main, log.levels.error, "Invalid log level: " .. tostring(level))
+		return
+	end
+	settings.log_level = level_num
+	log.log(log.systems.main, log.levels.info, "Log level set to " .. level)
 end)
 
 -- Padding to the right of the main button

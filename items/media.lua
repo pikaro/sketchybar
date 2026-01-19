@@ -1,3 +1,4 @@
+local log = require("helpers.log")
 local settings = require("settings")
 local icons = require("icons")
 local app_icons = require("helpers.app_icons")
@@ -160,23 +161,23 @@ local function animate_detail(detail)
 end
 
 play:subscribe("media_control_update", function(env)
-	print("[media] Received media control update")
+	log.log(log.systems.media, log.levels.debug, "Received update")
 
 	local data = b64.decode(env.DATA)
 	if not data or data == "" then
-		print("[media] No data received")
+		log.log(log.systems.media, log.levels.warning, "No data received")
 		return
 	end
 
 	local decoded = json.decode(data)
 	if not decoded then
-		print("[media] Failed to decode JSON")
+		log.log(log.systems.media, log.levels.warning, "Failed to decode JSON data")
 		return
 	end
 
 	local payload = decoded.payload
 	if not payload then
-		print("[media] No payload in data")
+		log.log(log.systems.media, log.levels.warning, "No payload in decoded data")
 		return
 	end
 
@@ -186,7 +187,7 @@ play:subscribe("media_control_update", function(env)
 	local bundle = payload.bundleIdentifier
 
 	if artist then
-		print("Artist:", artist)
+		log.log(log.systems.media, log.levels.info, "Artist change: " .. artist)
 		media_artist:set({
 			drawing = true,
 			label = {
@@ -196,7 +197,7 @@ play:subscribe("media_control_update", function(env)
 	end
 
 	if title then
-		print("Title:", title)
+		log.log(log.systems.media, log.levels.info, "Title change: " .. title)
 		media_title:set({
 			drawing = true,
 			label = {
@@ -209,11 +210,14 @@ play:subscribe("media_control_update", function(env)
 		local app_name = bundles[bundle]
 		if app_name then
 			local icon = app_icons[app_name] or app_icons["Default"]
+			log.log(log.systems.media, log.levels.info, "App change: " .. app_name)
 			app:set({
 				icon = {
 					string = icon,
 				},
 			})
+		else
+			log.log(log.systems.media, log.levels.warning, "Unknown app bundle: " .. bundle)
 		end
 	end
 
@@ -222,12 +226,14 @@ play:subscribe("media_control_update", function(env)
 		sbar.delay(5, animate_detail)
 
 		if playing then
+			log.log(log.systems.media, log.levels.info, "Playback state: Playing")
 			play:set({
 				icon = {
 					string = icons.media.pause,
 				},
 			})
 		else
+			log.log(log.systems.media, log.levels.info, "Playback state: Paused")
 			play:set({
 				icon = {
 					string = icons.media.play,

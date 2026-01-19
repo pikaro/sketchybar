@@ -1,7 +1,10 @@
 local colors = require("colors")
 local icons = require("icons")
+local const = require("helpers.const")
 
-return {
+local M = {
+	log_level = const.log_levels.info,
+
 	rainbow = false,
 	paddings = 3,
 	group_paddings = 5,
@@ -80,3 +83,5 @@ return {
 		},
 	},
 }
+
+return M
