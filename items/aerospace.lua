@@ -64,7 +64,7 @@ end
 
 function get_workspaces(ws_old, ws_order)
 	local result = runcmd(
-		"aerospace list-workspaces --all --json --format '%{workspace} %{workspace-is-visible} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-focused}'"
+		"aerospace list-workspaces --all --json --format '%{monitor-id} %{workspace} %{workspace-is-visible} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-focused}'"
 	)
 
 	if result == "" then
@@ -88,7 +88,9 @@ function get_workspaces_ordered(workspaces, order)
 		ws["name"] = ws["workspace"]
 		ws["focused"] = ws["workspace-is-focused"]
 		ws["visible"] = ws["workspace-is-visible"]
-		ws["monitor"] = tostring(ws["monitor-appkit-nsscreen-screens-id"])
+		-- TODO: monitor-appkit-nsscreen-screens-id does NOT seem to match although issues
+		--       suggest it does?
+		ws["monitor"] = tostring(ws["monitor-id"])
 		decorated[i] = { ws = ws, r = rank[prefix] or math.huge, i = i }
 	end
 
