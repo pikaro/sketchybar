@@ -1,6 +1,13 @@
-local json = require("cjson")
+local M = {}
 
-function runcmd(cmd)
+local function assert_not_nil(name, value, message)
+	if value == nil then
+		error(message or (name .. " should not be nil"), 2)
+	end
+end
+M.assert_not_nil = assert_not_nil
+
+local function runcmd(cmd)
 	local handle = io.popen(cmd .. " 2>&1 | head -c 65536", "r")
 	if handle == nil then
 		print("Error: could not execute command: " .. cmd)
@@ -21,8 +28,9 @@ function runcmd(cmd)
 
 	return result
 end
+M.runcmd = runcmd
 
-function dump(o)
+local function dump(o)
 	if type(o) == "table" then
 		local s = "{ "
 		for k, v in pairs(o) do
@@ -36,8 +44,9 @@ function dump(o)
 		return tostring(o)
 	end
 end
+M.dump = dump
 
-function explode(div, str)
+local function explode(div, str)
 	if div == "" then
 		return false
 	end
@@ -53,58 +62,15 @@ function explode(div, str)
 	table.insert(arr, string.sub(str, pos))
 	return arr
 end
+M.explode = explode
 
-function parse_string_to_table(s)
+local function parse_string_to_table(s)
 	local result = {}
 	for line in s:gmatch("([^\n]+)") do
 		table.insert(result, line)
 	end
 	return result
 end
+M.parse_string_to_table = parse_string_to_table
 
-function get_workspaces(ws_old, ws_order)
-	local result = runcmd(
-		"aerospace list-workspaces --all --json --format '%{monitor-id} %{workspace} %{workspace-is-visible} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-focused}'"
-	)
-
-	if result == "" then
-		return ws_old or {}
-	end
-
-	local ws_json = json.decode(result)
-
-	return get_workspaces_ordered(ws_json, ws_order)
-end
-
-function get_workspaces_ordered(workspaces, order)
-	local rank = {}
-	for i, prefix in ipairs(order) do
-		rank[prefix] = i
-	end
-
-	local decorated = {}
-	for i, ws in ipairs(workspaces) do
-		local prefix = ws.workspace:match("^%s*(%S+)")
-		ws["name"] = ws["workspace"]
-		ws["focused"] = ws["workspace-is-focused"]
-		ws["visible"] = ws["workspace-is-visible"]
-		-- TODO: monitor-appkit-nsscreen-screens-id does NOT seem to match although issues
-		--       suggest it does?
-		ws["monitor"] = tostring(ws["monitor-id"])
-		decorated[i] = { ws = ws, r = rank[prefix] or math.huge, i = i }
-	end
-
-	table.sort(decorated, function(a, b)
-		if a.r ~= b.r then
-			return a.r < b.r
-		end
-		return a.i < b.i
-	end)
-
-	local sorted = {}
-	for i, d in ipairs(decorated) do
-		sorted[i] = d.ws
-	end
-
-	return sorted
-end
+return M

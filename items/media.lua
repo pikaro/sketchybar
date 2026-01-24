@@ -6,29 +6,6 @@ local colors = require("colors")
 local b64 = require("helpers.b64")
 local json = require("cjson")
 
--- local media_cover = sbar.add("item", {
--- 	position = "right",
--- 	label = {
--- 		drawing = false,
--- 	},
--- 	icon = {
--- 		drawing = false,
--- 	},
--- 	drawing = false,
--- 	updates = true,
--- 	popup = {
--- 		align = "center",
--- 		horizontal = true,
--- 		background = {
--- 			image = {
--- 				string = "/tmp/sketchybar_cover_artwork",
--- 				scale = 0.85,
--- 			},
--- 			color = colors.transparent,
--- 		},
--- 	},
--- })
-
 sbar.add("item", "widgets.media.padding", {
 	position = "right",
 	width = 5,

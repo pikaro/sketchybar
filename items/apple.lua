@@ -66,7 +66,6 @@ apple:subscribe("set_log_level", function(env)
 	log.log(log.systems.main, log.levels.info, "Log level set to " .. level)
 end)
 
--- Padding to the right of the main button
 sbar.add("item", {
 	width = 7,
 })

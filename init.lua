@@ -1,4 +1,5 @@
 -- Require the sketchybar module
+---@diagnostic disable-next-line: lowercase-global
 sbar = require("sketchybar")
 
 -- Set the bar name, if you are using another bar instance than sketchybar

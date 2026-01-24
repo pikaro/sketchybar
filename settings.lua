@@ -3,7 +3,7 @@ local icons = require("icons")
 local const = require("helpers.const")
 
 local M = {
-	log_level = const.log_levels.info,
+	log_level = const.log_levels.debug,
 
 	rainbow = false,
 	paddings = 3,

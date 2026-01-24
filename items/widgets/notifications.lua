@@ -3,6 +3,7 @@ local colors = require("colors")
 local settings = require("settings")
 local settings_system = require("settings_system")
 local log = require("helpers.log")
+local fun = require("helpers.fun")
 
 local widgets = {}
 
@@ -11,7 +12,7 @@ local function run(app)
 end
 
 local function get_count_lsapp(app)
-	local result = runcmd("lsappinfo -all info -only StatusLabel '" .. app .. "' 2>/dev/null")
+	local result = fun.runcmd("lsappinfo -all info -only StatusLabel '" .. app .. "' 2>/dev/null")
 
 	if not result or result == "" then
 		return 0
@@ -30,13 +31,14 @@ local methods = {
 	["Microsoft Outlook"] = get_count_lsapp,
 	["Microsoft Teams"] = get_count_lsapp,
 	["Microsoft To Do"] = get_count_lsapp,
+	["Telegram"] = get_count_lsapp,
 }
 
-function rpairs(t)
-	return function(t, i)
+local function rpairs(t)
+	return function(p, i)
 		i = i - 1
 		if i ~= 0 then
-			return i, t[i]
+			return i, p[i]
 		end
 	end, t, #t + 1
 end

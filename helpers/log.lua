@@ -8,8 +8,6 @@ local level_names = {
 	"err",
 }
 
-settings.log_level = const.log_levels.info
-
 local function do_log(system, level, message)
 	if level < settings.log_level then
 		return
@@ -26,6 +24,7 @@ return {
 		main = " M ",
 		media = "med",
 		notifications = "ntf",
+		aerospace = "aer",
 	},
 	levels = const.log_levels,
 	log = do_log,

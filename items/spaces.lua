@@ -1,17 +1,20 @@
+local log = require("helpers.log")
+local fun = require("helpers.fun")
 local colors = require("colors")
 local icons = require("icons")
 local settings = require("settings")
 local app_icons = require("helpers.app_icons")
+local aerospace = require("helpers.aerospace")
 
 local spaces = {}
 local space_indices = {}
 
-local workspaces = get_workspaces(nil, settings.space_order)
+local workspaces = aerospace.get_workspaces(nil, settings.space_order)
 
 local focused_window = nil
 
 local function get_focused_window()
-	focused_window = runcmd("aerospace list-windows --focused --format '%{window-id}' | tr -d '\n'")
+	focused_window = fun.runcmd("aerospace list-windows --focused --format '%{window-id}' | tr -d '\n'")
 end
 
 get_focused_window()
@@ -37,6 +40,9 @@ local function get_space_fg(focused, visible)
 end
 
 local function set_space_icons(ws_name, space)
+	fun.assert_not_nil("ws_name", ws_name)
+	fun.assert_not_nil("space", space)
+
 	sbar.exec(
 		"aerospace list-windows --workspace " .. ws_name .. " --format '%{app-name} %{window-id}' --json ",
 		function(apps)
@@ -205,7 +211,7 @@ local function update_workspace(ws, monitor, focused, visible)
 end
 
 space_window_observer:subscribe("aerospace_workspace_change", function()
-	workspaces = get_workspaces(workspaces, settings.space_order)
+	workspaces = aerospace.get_workspaces(workspaces, settings.space_order)
 
 	for _, ws in ipairs(workspaces) do
 		local space = spaces[space_indices[ws.name]]
@@ -225,13 +231,14 @@ space_window_observer:subscribe("aerospace_focus_change", function()
 	end
 end)
 
+space_window_observer:subscribe("display_change", function() end)
+
 spaces_indicator:subscribe("swap_menus_and_spaces", function()
 	local currently_on = spaces_indicator:query().icon.value == icons.switch.on
 	spaces_indicator:set({
 		icon = currently_on and icons.switch.off or icons.switch.on,
 	})
 end)
-
 spaces_indicator:subscribe("mouse.entered", function()
 	sbar.animate("tanh", 30, function()
 		spaces_indicator:set({
