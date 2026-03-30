@@ -28,6 +28,7 @@ end
 local methods = {
 	["Mail"] = get_count_lsapp,
 	["Slack"] = get_count_lsapp,
+	["Signal"] = get_count_lsapp,
 	["Microsoft Outlook"] = get_count_lsapp,
 	["Microsoft Teams"] = get_count_lsapp,
 	["Microsoft To Do"] = get_count_lsapp,
