@@ -44,7 +44,7 @@ local function set_space_icons(ws_name, space)
 	fun.assert_not_nil("space", space)
 
 	sbar.exec(
-		"aerospace list-windows --workspace " .. ws_name .. " --format '%{app-name} %{window-id}' --json ",
+		"timeout 1 aerospace list-windows --workspace " .. ws_name .. " --format '%{app-name} %{window-id}' --json ",
 		function(apps)
 			local icon_line = ""
 			local no_app = true
