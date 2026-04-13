@@ -11,18 +11,17 @@ local function run(app)
 	sbar.exec("osascript -e 'tell application \"" .. app .. "\" to activate'")
 end
 
-local function get_count_lsapp(app)
-	local result = fun.runcmd("lsappinfo -all info -only StatusLabel '" .. app .. "' 2>/dev/null")
+local function get_count_lsapp(app, callback)
+	fun.runcmd("lsappinfo -all info -only StatusLabel '" .. app .. "' 2>/dev/null", function(result)
+		if not result or result == "" then
+			callback(0)
+			return
+		end
 
-	if not result or result == "" then
-		return 0
-	end
-
-	-- Format: "StatusLabel"={ "label"="<count>" }
-
-	local count = string.match(result, '"label"="([^"]+)"')
-
-	return count or 0
+		-- Format: "StatusLabel"={ "label"="<count>" }
+		local count = string.match(result, '"label"="([^"]+)"')
+		callback(count or 0)
+	end)
 end
 
 local methods = {
@@ -44,71 +43,73 @@ local function rpairs(t)
 	end, t, #t + 1
 end
 
-local function get_count(app)
+local function get_count(app, callback)
 	if not methods[app] then
 		-- FIXME: Include fallback for WhatsApp
 		log.log(log.systems.notifications, log.levels.warning, "No notification method for app: " .. app)
-		return nil
+		callback(nil)
+		return
 	end
 
-	return methods[app](app)
+	methods[app](app, callback)
 end
 
 local function update_count(app, widget)
-	local count = get_count(app)
-	log.log(log.systems.notifications, log.levels.debug, "App: " .. app .. ", Count: " .. tostring(count))
+	get_count(app, function(count)
+		log.log(log.systems.notifications, log.levels.debug, "App: " .. app .. ", Count: " .. tostring(count))
 
-	if count then
-		if (type(count) == "number" and count > 0) or (type(count) == "string" and count ~= "0" and count ~= "") then
-			widget:set({
-				label = {
-					string = tostring(count),
-					color = colors.red,
+		if count then
+			if (type(count) == "number" and count > 0) or (type(count) == "string" and count ~= "0" and count ~= "") then
+				widget:set({
+					label = {
+						string = tostring(count),
+						color = colors.red,
+						drawing = true,
+					},
+					icon = {
+						color = colors.red,
+						drawing = true,
+					},
+					background = {
+						drawing = true,
+					},
 					drawing = true,
-				},
-				icon = {
-					color = colors.red,
-					drawing = true,
-				},
-				background = {
-					drawing = true,
-				},
-				drawing = true,
-			})
+				})
+			else
+				widget:set({
+					label = {
+						string = "0",
+						color = colors.grey,
+						drawing = settings.notifications_show_empty,
+					},
+					icon = {
+						color = colors.grey,
+						drawing = settings.notifications_show_empty,
+					},
+					background = {
+						drawing = settings.notifications_show_empty,
+					},
+					drawing = settings.notifications_show_empty,
+				})
+			end
 		else
 			widget:set({
 				label = {
-					string = "0",
-					color = colors.grey,
-					drawing = settings.notifications_show_empty,
+					string = "?",
+					color = colors.red,
+					drawing = true,
 				},
 				icon = {
 					color = colors.grey,
-					drawing = settings.notifications_show_empty,
+					drawing = true,
 				},
 				background = {
-					drawing = settings.notifications_show_empty,
+					drawing = true,
 				},
-				drawing = settings.notifications_show_empty,
+				drawing = true,
 			})
 		end
-	else
-		widget:set({
-			label = {
-				string = "?",
-				color = colors.red,
-				drawing = true,
-			},
-			icon = {
-				color = colors.grey,
-				drawing = true,
-			},
-			background = {
-				drawing = true,
-			},
-			drawing = true,
-		})
-	end
+	end)
 end
 
 local function add_widget(app)

@@ -1,65 +1,95 @@
 local log = require("helpers.log")
 local json = require("cjson")
 local fun = require("helpers.fun")
+local trace = require("helpers.trace")
 
 local M = {}
 
 -- map[DirectDisplayID] = arrangement-id
 local display_map = nil
 
-local function build_display_map()
+local function build_display_map(callback)
 	log.log(log.systems.aerospace, log.levels.info, "Rebuilding display map")
+	trace.event("aerospace.build_display_map.start", {})
 
-	local out = fun.runcmd("sketchybar --query displays")
-	if out == "" then
-		log.log(log.systems.aerospace, log.levels.error, "Failed to get display info from sketchybar")
-		return
-	end
-
-	local displays = json.decode(out)
-	if displays == nil then
-		log.log(log.systems.aerospace, log.levels.error, "Failed to decode display info JSON from sketchybar")
-		return
-	end
-
-	local dm = {}
-
-	for _, d in ipairs(displays) do
-		local id = d.DirectDisplayID
-		if id ~= nil then
-			log.log(
-				log.systems.aerospace,
-				log.levels.debug,
-				"Mapping display ID " .. tostring(id) .. " to arrangement ID " .. tostring(d["arrangement-id"])
-			)
-			dm[id] = d["arrangement-id"]
-		else
-			log.log(
-				log.systems.aerospace,
-				log.levels.warn,
-				"Display " .. tostring(d["arrangement-id"]) .. " without DirectDisplayID found in sketchybar output"
-			)
+	fun.runcmd("sketchybar --query displays", function(out)
+		if out == "" then
+			log.log(log.systems.aerospace, log.levels.error, "Failed to get display info from sketchybar")
+			trace.event("aerospace.build_display_map.empty", {})
+			if callback then
+				callback(nil)
+			end
+			return
 		end
-	end
 
-	display_map = dm
+		local displays = out
+		if type(displays) == "string" then
+			displays = json.decode(displays)
+		end
+		if displays == nil then
+			log.log(log.systems.aerospace, log.levels.error, "Failed to decode display info JSON from sketchybar")
+			trace.event("aerospace.build_display_map.decode_failed", {})
+			if callback then
+				callback(nil)
+			end
+			return
+		end
+
+		local dm = {}
+
+		for _, d in ipairs(displays) do
+			local id = d.DirectDisplayID
+			if id ~= nil then
+				log.log(
+					log.systems.aerospace,
+					log.levels.debug,
+					"Mapping display ID " .. tostring(id) .. " to arrangement ID " .. tostring(d["arrangement-id"])
+				)
+				dm[id] = d["arrangement-id"]
+			else
+				log.log(
+					log.systems.aerospace,
+					log.levels.warn,
+					"Display " .. tostring(d["arrangement-id"]) .. " without DirectDisplayID found in sketchybar output"
+				)
+			end
+		end
+
+		display_map = dm
+		trace.event("aerospace.build_display_map.done", {
+			displays = #displays,
+		})
+		if callback then
+			callback(dm)
+		end
+	end)
 end
-build_display_map()
 M.build_display_map = build_display_map
 
-local function get_workspaces(ws_old, ws_order)
-	local result = fun.runcmd(
-		"aerospace list-workspaces --all --json --format '%{monitor-id} %{workspace} %{workspace-is-visible} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-focused}'"
+local function get_workspaces(ws_old, ws_order, callback)
+	trace.event("aerospace.get_workspaces.start", {
+		previous = ws_old and #ws_old or 0,
+	})
+	fun.runcmd(
+		"aerospace list-workspaces --all --json --format '%{monitor-id} %{workspace} %{workspace-is-visible} %{monitor-appkit-nsscreen-screens-id} %{workspace-is-focused}'",
+		function(result)
+			if result == "" then
+				log.log(log.systems.aerospace, log.levels.error, "Failed to get workspaces from aerospace")
+				trace.event("aerospace.get_workspaces.empty", {})
+				callback(ws_old or {})
+				return
+			end
+
+			local ws_json = result
+			if type(ws_json) == "string" then
+				ws_json = json.decode(ws_json)
+			end
+			trace.event("aerospace.get_workspaces.done", {
+				count = ws_json and #ws_json or 0,
+			})
+			callback(M.get_workspaces_ordered(ws_json, ws_order))
+		end
 	)
-
-	if result == "" then
-		log.log(log.systems.aerospace, log.levels.error, "Failed to get workspaces from aerospace")
-		return ws_old or {}
-	end
-
-	local ws_json = json.decode(result)
-
-	return M.get_workspaces_ordered(ws_json, ws_order)
 end
 M.get_workspaces = get_workspaces
 
@@ -70,18 +100,19 @@ local function get_workspaces_ordered(workspaces, order)
 	end
 
 	local dm = display_map
-	if dm == nil then
-		log.log(log.systems.aerospace, log.levels.error, "Display map is nil")
-		return workspaces
-	end
 
 	local decorated = {}
+	local fallback_monitor = 1
 	for i, ws in ipairs(workspaces) do
 		local prefix = ws.workspace:match("^%s*(%S+)")
 		ws["name"] = ws["workspace"]
 		ws["focused"] = ws["workspace-is-focused"]
 		ws["visible"] = ws["workspace-is-visible"]
-		ws["monitor"] = dm[ws["monitor-appkit-nsscreen-screens-id"]]
+		if dm ~= nil then
+			ws["monitor"] = dm[ws["monitor-appkit-nsscreen-screens-id"]] or fallback_monitor
+		else
+			ws["monitor"] = fallback_monitor
+		end
 		log.log(
 			log.systems.aerospace,
 			log.levels.debug,

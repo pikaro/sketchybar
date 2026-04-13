@@ -1,4 +1,5 @@
 local M = {}
+local trace = require("helpers.trace")
 
 local function assert_not_nil(name, value, message)
 	if value == nil then
@@ -7,26 +8,24 @@ local function assert_not_nil(name, value, message)
 end
 M.assert_not_nil = assert_not_nil
 
-local function runcmd(cmd)
-	local handle = io.popen(cmd .. " 2>&1 | head -c 65536", "r")
-	if handle == nil then
-		print("Error: could not execute command: " .. cmd)
-		return ""
-	end
+local function runcmd(cmd, callback)
+	assert_not_nil("cmd", cmd)
+	assert_not_nil("callback", callback, "runcmd requires a callback")
+	local command_id = trace.shell_start(cmd, {
+		source = "helpers.fun.runcmd",
+	})
 
-	local result = handle:read("*a")
-	-- FIXME: Hangs in close() randomly despite no child processes actually running
-	--        Is waiting for nonexistent low PID like 4 - memory corruption?
-	--        Apparent deadlock with mach2_read for IPC to CPU/network usage?
-	--        Lua GC should clean up FDs and even with rapid switching, no apparent
-	--        persistent leakage.
+	sbar.exec(cmd, function(result, exit_code)
+		trace.shell_done(command_id, exit_code, result, {
+			source = "helpers.fun.runcmd",
+		})
 
-	-- local ok, reason, code = handle:close()
-	-- if not ok then
-	-- 	print("Error: failed: ok=" .. tostring(ok) .. ", reason=" .. tostring(reason) .. ", code=" .. tostring(code))
-	-- end
+		if exit_code ~= 0 and (result == nil or result == "") then
+			print("Error: command failed: " .. cmd .. " (exit " .. tostring(exit_code) .. ")")
+		end
 
-	return result
+		callback(result or "", exit_code)
+	end)
 end
 M.runcmd = runcmd
 
