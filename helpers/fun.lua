@@ -33,10 +33,11 @@ local function dump(o)
 	if type(o) == "table" then
 		local s = "{ "
 		for k, v in pairs(o) do
+			local key = k
 			if type(k) ~= "number" then
-				k = '"' .. k .. '"'
+				key = '"' .. k .. '"'
 			end
-			s = s .. "[" .. k .. "] = " .. dump(v) .. ","
+			s = s .. "[" .. key .. "] = " .. dump(v) .. ","
 		end
 		return s .. "} "
 	else
